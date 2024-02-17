@@ -6,21 +6,34 @@
     <title>Notebook App</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold">Daily Notebook</h1>
+<body class="flex h-screen">
 
-        <!-- File Upload -->
-        <input type="file" id="file-upload" class="my-4" />
-        <button onclick="uploadData()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Upload Data</button>
-
-        <!-- Download Button -->
-        <button onclick="downloadData()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded my-4">Download Data</button>
-
-        <div id="calendar"></div>
-        <div id="entry"></div>
+    <!-- Fixed Header -->
+    <div class="bg-white fixed top-0 left-0 right-0 shadow z-10">
+        <div class="container mx-auto px-4 py-2 flex items-center justify-between">
+            <h1 class="text-xl font-bold">WarriorLog</h1>
+            <div class="flex-grow"></div> <!-- Spacer -->
+            <label class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 text-xs rounded mx-1 cursor-pointer">
+                Upload
+                <input type="file" id="file-upload" class="hidden" onchange="uploadData()" />
+            </label>
+            <button onclick="downloadData()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 text-xs rounded mx-1">Download</button>
+            <button id="saveEntryButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 text-xs rounded mx-1">Save</button>
+        </div>
     </div>
-
+    
+    <!-- Main Content Area -->
+    <div class="flex-grow flex flex-col ml-40">
+        <div class="flex-grow overflow-auto pt-16">
+            <div id="entry" class="container mx-auto p-4">
+                <!-- Entry Content -->
+            </div>
+        </div>
+        <div id="calendar" class="fixed left-0 top-10 bottom-0 overflow-y-auto border border-gray-300 p-2.5"></div>
+        <div id="entryListContainer" class="fixed left-0 top-13 bottom-0 overflow-y-auto border border-gray-300 p-2.5" style="width: 160px; max-height: calc(100vh - 150px);">
+            <!-- Entry List Content -->
+        </div>
+    </div>
     <script src="app.js"></script>
 </body>
 </html>

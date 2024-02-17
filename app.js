@@ -5,21 +5,57 @@ function uploadData() {
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            const data = JSON.parse(e.target.result);
-            for (const key in data) {
-                localStorage.setItem(key, JSON.stringify(data[key]));
+            try {
+                const data = JSON.parse(e.target.result);
+                if (isValidData(data)) {
+                    for (const key in data) {
+                        localStorage.setItem(key, JSON.stringify(data[key]));
+                    }
+                    createEntryList(); // Refresh the entry list
+                } else {
+                    alert("Invalid file format");
+                }
+            } catch (error) {
+                console.error("Error reading file:", error); // Log the error to the console
+                alert("An error occurred while reading the file");
             }
-            createEntryList(); // Refresh the entry list
         };
         reader.readAsText(file);
+    } else {
+        // Alert the user to choose a file
+        alert("Please choose a file to upload");
     }
+}
+
+function isValidData(data) {
+    // Check if data is an object
+    if (typeof data !== "object" || data === null) {
+        return false;
+    }
+
+    // Check each key and its corresponding value structure
+    for (const key in data) {
+        const entry = data[key];
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+            return false;
+        }
+        const sections = ['dream', 'idea', 'reflections', 'lessons-learned', 'diet'];
+        for (const section of sections) {
+            if (!(section in entry)) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 function downloadData() {
     const data = {};
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        data[key] = JSON.parse(localStorage.getItem(key));
+        if (key !== 'entryList') { // Exclude 'entryList' from the download file
+            data[key] = JSON.parse(localStorage.getItem(key));
+        }
     }
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
     const downloadAnchorNode = document.createElement('a');
@@ -33,7 +69,9 @@ function downloadData() {
 document.addEventListener('DOMContentLoaded', function() {
     const calendar = document.createElement('input');
     calendar.setAttribute('type', 'date');
-    calendar.classList.add('my-4', 'p-2', 'border', 'border-gray-300', 'rounded');
+    calendar.setAttribute('id', 'calendar-input');
+
+    calendar.classList.add('form-input', 'w-38', 'mx-2', 'text-xs', 'my-4', 'p-2', 'border', 'border-gray-300', 'rounded');
     
     calendar.addEventListener('change', function(event) {
         displayEntryForDate(event.target.value);
@@ -46,27 +84,38 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar.value = today;
     displayEntryForDate(today);
 
+    const saveButton = document.getElementById('saveEntryButton');
+    saveButton.addEventListener('click', function() {
+        const selectedDate = document.querySelector('input[type="date"]').value;
+        saveData(selectedDate);
+    });
+
     // Initialize and display the entry list
     createEntryList();
 });
 
 function createEntryList() {
-    const entries = JSON.parse(localStorage.getItem('entryList')) || [];
-    let listDiv = document.getElementById('entryList');
+    let listDiv = document.getElementById('entryListContainer');
 
-    if (!listDiv) {
-        listDiv = document.createElement('div');
-        listDiv.id = 'entryList';
-        document.body.insertBefore(listDiv, document.getElementById('calendar').nextSibling);
-    } else {
-        listDiv.innerHTML = '';
+    listDiv.innerHTML = ''; // Clear existing content
+
+    // Fetch keys from localStorage and filter out non-date keys
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.match(/^\d{4}-\d{2}-\d{2}$/)) { // Regex to check if key is a date (YYYY-MM-DD)
+            const dateElement = document.createElement('div');
+            dateElement.textContent = key;
+            dateElement.classList.add('cursor-pointer', 'hover:bg-gray-200'); // Tailwind classes for styling
+            dateElement.onclick = () => loadDateEntry(key);
+            listDiv.appendChild(dateElement);
+        }
     }
+}
 
-    entries.forEach(date => {
-        const dateElement = document.createElement('div');
-        dateElement.textContent = date;
-        listDiv.appendChild(dateElement);
-    });
+function loadDateEntry(date) {
+    const calendar = document.getElementById('calendar-input');
+    calendar.value = date;
+    displayEntryForDate(date);
 }
 
 function displayEntryForDate(date) {
@@ -82,13 +131,7 @@ function displayEntryForDate(date) {
 
     // Load existing data if available
     loadData(date);
-
-    // Save button
-    const saveButton = document.createElement('button');
-    saveButton.textContent = 'Save Entry';
-    saveButton.classList.add('bg-blue-500', 'hover:bg-blue-700', 'text-white', 'font-bold', 'py-2', 'px-4', 'rounded');
-    saveButton.addEventListener('click', () => saveData(date));
-    entryDiv.appendChild(saveButton);
+    
 }
 
 function saveData(date) {

@@ -80,9 +80,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('calendar').appendChild(calendar);
 
     // Load entry for current date by default
-    const today = new Date().toISOString().split('T')[0];
-    calendar.value = today;
-    displayEntryForDate(today);
+    const today = new Date();
+    const offset = today.getTimezoneOffset() * 60000; // Convert offset to milliseconds
+    const localISODate = new Date(today - offset).toISOString().split('T')[0];
+    calendar.value = localISODate;
+    displayEntryForDate(localISODate);
 
     const saveButton = document.getElementById('saveEntryButton');
     saveButton.addEventListener('click', function() {
